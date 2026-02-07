@@ -1,0 +1,161 @@
+# Filter order in GUI. First one is default.
+order:
+  - all
+  - weapons
+  - armor
+  - tools
+  - food
+  - blocks
+  - utility
+
+filters:
+  all:
+    materials: []
+    contains: []
+
+  weapons:
+    materials:
+      - WOODEN_SWORD
+      - STONE_SWORD
+      - IRON_SWORD
+      - GOLDEN_SWORD
+      - DIAMOND_SWORD
+      - NETHERITE_SWORD
+      - WOODEN_AXE
+      - STONE_AXE
+      - IRON_AXE
+      - GOLDEN_AXE
+      - DIAMOND_AXE
+      - NETHERITE_AXE
+      - BOW
+      - CROSSBOW
+      - TRIDENT
+      - MACE
+    contains: []
+
+  armor:
+    contains:
+      - _HELMET
+      - _CHESTPLATE
+      - _LEGGINGS
+      - _BOOTS
+      - ELYTRA
+      - SHIELD
+      - TURTLE_HELMET
+      - WOLF_ARMOR
+    materials: []
+
+  tools:
+    contains:
+      - _PICKAXE
+      - _SHOVEL
+      - _HOE
+      - _AXE
+      - _SHEARS
+      - FISHING_ROD
+      - FLINT_AND_STEEL
+      - BRUSH
+      - SPYGLASS
+      - COMPASS
+      - RECOVERY_COMPASS
+    materials: []
+
+  food:
+    contains:
+      - APPLE
+      - BREAD
+      - POTATO
+      - CARROT
+      - BEEF
+      - CHICKEN
+      - PORKCHOP
+      - MUTTON
+      - RABBIT
+      - SALMON
+      - COD
+      - STEW
+      - PIE
+      - COOKIE
+      - KELP
+      - BERRY
+      - MELON_SLICE
+      - HONEY_BOTTLE
+      - SUSPICIOUS_STEW
+      - CAKE
+      - GOLDEN_APPLE
+      - ENCHANTED_GOLDEN_APPLE
+    materials: []
+
+  blocks:
+    contains:
+      - _PLANKS
+      - _LOG
+      - _WOOD
+      - _STONE
+      - _BRICKS
+      - _STAIRS
+      - _SLAB
+      - _WALL
+      - _FENCE
+      - _GLASS
+      - _CONCRETE
+      - _TERRACOTTA
+      - _WOOL
+      - _BANNER
+      - _SHULKER_BOX
+      - _LEAVES
+      - _ORE
+      - _BLOCK
+    materials: []
+
+  utility:
+    materials:
+      - TOTEM_OF_UNDYING
+      - ENDER_PEARL
+      - CHORUS_FRUIT
+      - FIREWORK_ROCKET
+      - EXPERIENCE_BOTTLE
+      - NAME_TAG
+      - SADDLE
+      - LEAD
+      - BUCKET
+      - WATER_BUCKET
+      - LAVA_BUCKET
+      - POWDER_SNOW_BUCKET
+      - MILK_BUCKET
+      - POTION
+      - SPLASH_POTION
+      - LINGERING_POTION
+      - DRAGON_BREATH
+      - ENCHANTED_BOOK
+      - BOOK
+      - WRITABLE_BOOK
+      - WRITTEN_BOOK
+      - ENDER_CHEST
+      - SHULKER_SHELL
+      - NETHER_STAR
+      - HEART_OF_THE_SEA
+      - MUSIC_DISC_13
+      - MUSIC_DISC_CAT
+      - MUSIC_DISC_BLOCKS
+      - MUSIC_DISC_CHIRP
+      - MUSIC_DISC_FAR
+      - MUSIC_DISC_MALL
+      - MUSIC_DISC_MELLOHI
+      - MUSIC_DISC_STAL
+      - MUSIC_DISC_STRAD
+      - MUSIC_DISC_WARD
+      - MUSIC_DISC_11
+      - MUSIC_DISC_WAIT
+      - MUSIC_DISC_OTHERSIDE
+      - MUSIC_DISC_RELIC
+      - MUSIC_DISC_5
+      - MUSIC_DISC_PIGSTEP
+      - GOAT_HORN
+      - TRIAL_KEY
+      - OMINOUS_TRIAL_KEY
+      - HEAVY_CORE
+    contains:
+      - POTION
+      - ARROW
+      - MAP

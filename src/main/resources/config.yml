@@ -1,0 +1,330 @@
+﻿# ------------------------------------------------------------
+# EN: DonutAuctions - Main Configuration
+# TR: DonutAuctions - Ana Konfig
+# ------------------------------------------------------------
+# EN: Comments are documentation only.
+# TR: Yorumlar sadece aciklama amaclidir.
+# EN: Some options require reload to take effect.
+# TR: Bazi ayarlar etkili olmak icin yeniden yukleme ister.
+# EN: Use /ah reload to reload config and language files.
+# TR: Config ve dil dosyalarini yenilemek icin /ah reload kullan.
+
+# EN: Language file to use:
+# TR: Kullanilacak dil dosyasi:
+# EN: en -> plugins/DonutAuctions/lang/en.yml
+# TR: en -> plugins/DonutAuctions/lang/en.yml
+# EN: tr -> plugins/DonutAuctions/lang/tr.yml
+# TR: tr -> plugins/DonutAuctions/lang/tr.yml
+language: en
+
+auction:
+  # EN: Listing lifetime in hours.
+  # TR: Ilanin aktif kalma suresi (saat).
+  # EN: Expired listings are removed from active view.
+  # TR: Suresi dolan ilanlar aktif listeden cikar.
+  listing-duration-hours: 24
+
+  # EN: Allowed manual price range for /ah sell <price>.
+  # TR: /ah sell <fiyat> icin izin verilen manuel fiyat araligi.
+  min-price: 0.01
+  max-price: 1000000000.0
+
+  # EN: Maximum chat search length.
+  # TR: Sohbet aramasi icin maksimum karakter uzunlugu.
+  # EN: Longer input is truncated safely.
+  # TR: Daha uzun girisler guvenli sekilde kisaltilir.
+  max-search-length: 32
+
+  # EN: Maximum buy/sell transaction records stored per player scope view.
+  # TR: Oyuncu gorunumu icin saklanacak maksimum alim/satim kaydi.
+  transactions-max: 200
+
+  limits:
+    # EN: Maximum active listings per player.
+    # TR: Oyuncu basina maksimum aktif ilan sayisi.
+    max-active-per-player: 20
+
+# EN: Basic click throttle against GUI spam/macro behavior.
+# TR: GUI spam/makro tiklamalara karsi temel tiklama siniri.
+security:
+  click-cooldown-ms: 80
+  # EN: Max accepted display-name length for listable items.
+  # TR: Listelenebilir itemler icin max display-name uzunlugu.
+  max-display-name-length: 96
+  # EN: Max accepted lore line count for listable items.
+  # TR: Listelenebilir itemler icin max lore satir sayisi.
+  max-lore-lines: 20
+  # EN: Max accepted length per lore line.
+  # TR: Lore satiri basina max karakter uzunlugu.
+  max-lore-line-length: 160
+  # EN: Max allowed PersistentDataContainer key count in item meta.
+  # TR: Item meta icindeki max PersistentDataContainer anahtar sayisi.
+  max-pdc-keys: 16
+
+# EN: Durability settings.
+# TR: Dayaniklilik ayarlari.
+storage:
+  # EN: Autosave period in ticks (20 ticks = 1 second).
+  # TR: Otomatik kayit periyodu (20 tick = 1 saniye).
+  autosave-ticks: 1200
+  # EN: Number of rotated backups to keep.
+  # TR: Tutulacak donusumlu yedek sayisi.
+  backup-keep: 5
+
+ultimateshop:
+  # EN: Enable/disable UltimateShop integration.
+  # TR: UltimateShop entegrasyonunu ac/kapat.
+  enabled: true
+
+  # EN: If true, only items sellable in UltimateShop can be listed in AH.
+  # TR: true ise AH'de sadece UltimateShop'ta satilabilir itemler listelenir.
+  only-sellable-items: false
+
+  # EN: If true, /ah sell always uses UltimateShop suggested price.
+  # TR: true ise /ah sell her zaman UltimateShop onerilen fiyati kullanir.
+  # EN: Manual player price input is ignored.
+  # TR: Oyuncunun manuel fiyat girdisi yok sayilir.
+  force-recommended-price-when-enabled: false
+
+  # ----------------------------------------------------------
+  # EN: Base price multiplier
+  # TR: Temel fiyat carpani
+  # ----------------------------------------------------------
+  # EN: Plain auction value = UltimateShop sell price * this multiplier.
+  # TR: Yalin ihale degeri = UltimateShop satis fiyati * bu carpan.
+  # EN: Example: sell=1000, multiplier=1.25 -> plain=1250.
+  # TR: Ornek: satis=1000, carpan=1.25 -> yalin=1250.
+  # EN: Both keys are kept for backward compatibility.
+  # TR: Geriye donuk uyumluluk icin iki anahtar da bulunur.
+  base-price-multiplier: 1.25
+  base-auction-multiplier: 1.25
+
+  # ----------------------------------------------------------
+  # EN: Dynamic price / sale counter behavior
+  # TR: Dinamik fiyat / satis sayaci davranisi
+  # ----------------------------------------------------------
+  # EN: Add auction sales into UltimateShop sold counters.
+  # TR: Ihalede satilanlari UltimateShop satis sayacina ekler.
+  # EN: This can affect UltimateShop dynamic pricing.
+  # TR: Bu ayar UltimateShop dinamik fiyatlamasini etkileyebilir.
+  increase-dynamic-sales: false
+  increase-dynamic-price-on-auction-sale: false
+
+  # EN: Optional console commands executed on dynamic-sale updates.
+  # TR: Dinamik satis guncellemesinde calistirilacak opsiyonel konsol komutlari.
+  # EN: Placeholders: %material% (material id), %amount% (amount).
+  # TR: Placeholders: %material% (materyal id), %amount% (adet).
+  dynamic-sale-command:
+    enabled: false
+    commands:
+      - "say Dynamic sale updated for %material% x%amount%"
+
+  # ----------------------------------------------------------
+  # EN: Fallback material prices
+  # TR: Yedek materyal fiyatlari
+  # ----------------------------------------------------------
+  # EN: Used when UltimateShop API cannot provide sell value.
+  # TR: UltimateShop API satis degeri veremezse kullanilir.
+  # EN: Lookup order:
+  # TR: Arama sirasi:
+  # EN: 1) material-base-prices.<MATERIAL>
+  # TR: 1) material-base-prices.<MATERIAL>
+  # EN: 2) fallback-material-prices.<MATERIAL>
+  # TR: 2) fallback-material-prices.<MATERIAL>
+  material-base-prices:
+    TOTEM_OF_UNDYING: 3000.0
+    DIAMOND: 200.0
+  fallback-material-prices:
+    TOTEM_OF_UNDYING: 3000.0
+    DIAMOND: 200.0
+
+  # ----------------------------------------------------------
+  # EN: Enchantment multipliers
+  # TR: Buyu katsayilari
+  # ----------------------------------------------------------
+  # EN: Formula:
+  # TR: Formul:
+  # EN: 1) plain_value = sell_price * base-auction-multiplier
+  # TR: 1) yalin_deger = satis_fiyati * base-auction-multiplier
+  # EN: 2) Each enchant bonus is calculated separately from plain_value:
+  # TR: 2) Her buyu bonusu yalin_deger uzerinden ayri hesaplanir:
+  # EN:    bonus = plain_value * multiplier
+  # TR:    bonus = yalin_deger * katsayi
+  # EN: 3) total = plain_value + sum(all enchant bonuses)
+  # TR: 3) toplam = yalin_deger + tum buyu bonuslarinin toplami
+  # EN: Negative multipliers are allowed (for curses etc.).
+  # TR: Negatif katsayilar kullanilabilir (lanet buyuleri vb.).
+  # EN: Level keys must be strings: "1", "2", "3", ...
+  # TR: Seviye anahtarlari string olmali: "1", "2", "3", ...
+  enchantment-multipliers:
+    aqua_affinity:
+      "1": 0.08
+    bane_of_arthropods:
+      "1": 0.05
+      "2": 0.10
+      "3": 0.16
+      "4": 0.23
+      "5": 0.32
+    blast_protection:
+      "1": 0.05
+      "2": 0.10
+      "3": 0.20
+      "4": 0.35
+    breach:
+      "1": 0.08
+      "2": 0.16
+      "3": 0.28
+      "4": 0.42
+    channeling:
+      "1": 0.18
+    binding_curse:
+      "1": -0.25
+    vanishing_curse:
+      "1": -0.15
+    density:
+      "1": 0.08
+      "2": 0.16
+      "3": 0.25
+      "4": 0.35
+      "5": 0.50
+    depth_strider:
+      "1": 0.07
+      "2": 0.14
+      "3": 0.24
+    efficiency:
+      "1": 0.04
+      "2": 0.08
+      "3": 0.14
+      "4": 0.22
+      "5": 0.32
+    feather_falling:
+      "1": 0.06
+      "2": 0.12
+      "3": 0.20
+      "4": 0.32
+    fire_aspect:
+      "1": 0.12
+      "2": 0.28
+    fire_protection:
+      "1": 0.05
+      "2": 0.10
+      "3": 0.18
+      "4": 0.30
+    flame:
+      "1": 0.14
+    fortune:
+      "1": 0.12
+      "2": 0.24
+      "3": 0.42
+    frost_walker:
+      "1": 0.14
+      "2": 0.30
+    impaling:
+      "1": 0.05
+      "2": 0.10
+      "3": 0.16
+      "4": 0.23
+      "5": 0.32
+    infinity:
+      "1": 0.35
+    knockback:
+      "1": 0.06
+      "2": 0.14
+    looting:
+      "1": 0.10
+      "2": 0.22
+      "3": 0.38
+    loyalty:
+      "1": 0.06
+      "2": 0.14
+      "3": 0.25
+    luck_of_the_sea:
+      "1": 0.06
+      "2": 0.13
+      "3": 0.22
+    lure:
+      "1": 0.05
+      "2": 0.11
+      "3": 0.19
+    lunge:
+      "1": 0.10
+      "2": 0.22
+      "3": 0.36
+    mending:
+      "1": 0.50
+    multishot:
+      "1": 0.16
+    piercing:
+      "1": 0.05
+      "2": 0.10
+      "3": 0.16
+      "4": 0.25
+    power:
+      "1": 0.05
+      "2": 0.10
+      "3": 0.17
+      "4": 0.26
+      "5": 0.38
+    projectile_protection:
+      "1": 0.05
+      "2": 0.10
+      "3": 0.18
+      "4": 0.30
+    protection:
+      "1": 0.05
+      "2": 0.10
+      "3": 0.20
+      "4": 0.40
+    punch:
+      "1": 0.08
+      "2": 0.18
+    quick_charge:
+      "1": 0.06
+      "2": 0.13
+      "3": 0.24
+    respiration:
+      "1": 0.08
+      "2": 0.16
+      "3": 0.30
+    riptide:
+      "1": 0.08
+      "2": 0.18
+      "3": 0.32
+    sharpness:
+      "1": 0.05
+      "2": 0.10
+      "3": 0.15
+      "4": 0.25
+      "5": 0.40
+    silk_touch:
+      "1": 0.28
+    smite:
+      "1": 0.05
+      "2": 0.10
+      "3": 0.16
+      "4": 0.23
+      "5": 0.32
+    soul_speed:
+      "1": 0.12
+      "2": 0.24
+      "3": 0.40
+    sweeping_edge:
+      "1": 0.07
+      "2": 0.16
+      "3": 0.30
+    swift_sneak:
+      "1": 0.12
+      "2": 0.24
+      "3": 0.40
+    thorns:
+      "1": 0.10
+      "2": 0.22
+      "3": 0.38
+    unbreaking:
+      "1": 0.08
+      "2": 0.16
+      "3": 0.28
+    wind_burst:
+      "1": 0.14
+      "2": 0.28
+      "3": 0.45

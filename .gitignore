@@ -1,0 +1,28 @@
+# Maven / Java
+/target/
+/.mvn/
+*.class
+*.jar
+*.war
+*.ear
+
+# IDE
+/.idea/
+*.iml
+/.vscode/
+/.settings/
+/.project
+/.classpath
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Runtime / logs
+/logs/
+*.log
+
+# Test server folders (optional)
+/run/
+/server/
+/plugins/

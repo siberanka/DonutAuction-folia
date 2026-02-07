@@ -1,0 +1,16 @@
+name: DonutAuctions
+version: '${project.version}'
+main: com.siberanka.donutauctions.DonutAuctionsPlugin
+api-version: '1.21'
+folia-supported: true
+authors: [siberanka]
+softdepend: [Vault, UltimateShop]
+commands:
+  ah:
+    aliases: [auctionhouse, auction]
+    permission: donutauctions.command.ah
+permissions:
+  donutauctions.command.ah:
+    default: true
+  donutauctions.admin.reload:
+    default: op

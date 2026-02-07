@@ -1,0 +1,176 @@
+﻿prefix: "&8[&bDonutAuctions&8] &7"
+
+messages:
+  no-permission: "{prefix}&cYou do not have permission."
+  only-player: "{prefix}&cOnly players can use this command."
+  unknown-subcommand: "{prefix}&eUsage: /ah, /ah sell <price>, /ah my, /ah transactions"
+  hold-item: "{prefix}&cHold the item you want to list in your main hand."
+  invalid-price: "{prefix}&cInvalid price. Use a number greater than 0."
+  price-required: "{prefix}&ePrice is required. Use /ah sell <price>."
+  price-suggested: "{prefix}&aUltimateShop suggestion used: &f{price}"
+  price-forced-suggested: "{prefix}&eForced suggested price applied: &f{price}"
+  max-listings-reached: "{prefix}&cYou reached your active listing limit or item is not listable."
+  listing-created: "{prefix}&aListed &f{item} &afor &f{price}"
+  listing-removed: "{prefix}&eListing removed and item returned."
+  listing-bought: "{prefix}&aPurchased &f{item} &afor &f{price}"
+  not-enough-money: "{prefix}&cNot enough balance."
+  invalid-price-range: "{prefix}&cPrice is out of allowed range."
+  vault-required: "{prefix}&cVault economy is not available."
+  listing-not-found: "{prefix}&cListing was not found."
+  cannot-buy-own-item: "{prefix}&cYou cannot buy your own listing."
+  economy-failed: "{prefix}&cEconomy transaction failed safely."
+  try-again: "{prefix}&cAction failed safely, please try again."
+  search-start: "{prefix}&eType your search text in chat. Type &fclear &eto reset search."
+  search-set: "{prefix}&aSearch filter set to: &f{query}"
+  search-cleared: "{prefix}&aSearch filter cleared."
+  search-empty: "{prefix}&cSearch text cannot be empty."
+  filter-set: "{prefix}&aFilter set to: &f{filter}"
+  not-sellable-in-ultimateshop: "{prefix}&cThis item is not sellable in UltimateShop."
+  quick-list-hold-item: "{prefix}&cHold an item on your cursor first."
+  quick-list-no-price: "{prefix}&cNo recommended price could be determined for this item."
+  quick-list-success: "{prefix}&aQuick listed for &f{price}"
+  reloaded: "{prefix}&aConfig and language reloaded."
+
+filters:
+  names:
+    all: "ᴀʟʟ"
+    weapons: "ᴡᴇᴀᴘᴏɴs"
+    armor: "ᴀʀᴍᴏʀ"
+    tools: "ᴛᴏᴏʟs"
+    food: "ғᴏᴏᴅ"
+    blocks: "ʙʟᴏᴄᴋs"
+    utility: "ᴜᴛɪʟɪᴛʏ"
+
+gui:
+  sort-modes:
+    newest: "ɴᴇᴡᴇsᴛ"
+    oldest: "ᴏʟᴅᴇsᴛ"
+    price_low: "ᴘʀɪᴄᴇ ʟᴏᴡ ➜ ʜɪɢʜ"
+    price_high: "ᴘʀɪᴄᴇ ʜɪɢʜ ➜ ʟᴏᴡ"
+
+  auction:
+    title: "&0ᴀᴜᴄᴛɪᴏɴ (&f{page}&7/&f{max_page}&0)"
+    size: 54
+    item-slots: "0-44"
+    listing-lore:
+      - "&7Price: &a{price}"
+      - "&7Seller: &b{seller}"
+      - "&7Time Left: &a{time_left}"
+      - ""
+      - "&eClick to Buy"
+    own-listing-lore:
+      - "&7Price: &a{price}"
+      - "&7Seller: &b{seller}"
+      - "&7Time Left: &a{time_left}"
+      - ""
+      - "&cClick to Remove"
+    sort-active-line: "&a• {name}"
+    sort-inactive-line: "&7• {name}"
+    filter-active-line: "&a• {name}"
+    filter-inactive-line: "&7• {name}"
+    controls:
+      previous:
+        slot: 45
+        material: ARROW
+        name: "&fᴘʀᴇᴠɪᴏᴜs"
+        lore: ["&7Go to previous page"]
+      search:
+        slot: 49
+        material: OAK_SIGN
+        name: "&fѕᴇᴀʀᴄʜ"
+        lore: ["&7Click to search auctions", "&8(Type your query in chat)"]
+      filter:
+        slot: 47
+        material: HOPPER
+        name: "&fғɪʟᴛᴇʀ"
+        lore: ["&7Current filter: &f{filter_name}", "&8(Click to change category)"]
+      sort:
+        slot: 48
+        material: ANVIL
+        name: "&fѕᴏʀᴛ"
+        lore: ["&7Current sorting: &f{sort_name}", "&8(Click to change sorting)"]
+      my_items:
+        slot: 51
+        material: CHEST
+        name: "&fʏᴏᴜʀ ɪᴛᴇᴍs"
+        lore: ["&7Manage your active listings"]
+      transactions:
+        slot: 50
+        material: WRITABLE_BOOK
+        name: "&fᴛʀᴀɴsᴀᴄᴛɪᴏɴs"
+        lore: ["&7View your buy and sell history"]
+      next:
+        slot: 53
+        material: ARROW
+        name: "&fɴᴇxᴛ"
+        lore: ["&7Go to next page"]
+      filler:
+        slots: "46,52"
+        material: GRAY_STAINED_GLASS_PANE
+        name: " "
+        lore: []
+
+  my-items:
+    title: "&0ʏᴏᴜʀ ɪᴛᴇᴍs (&f{page}&7/&f{max_page}&0)"
+    size: 27
+    item-slots: "0-17"
+    controls:
+      previous:
+        slot: 18
+        material: ARROW
+        name: "&fᴘʀᴇᴠɪᴏᴜs"
+        lore: ["&7Go to previous page"]
+      quick_list:
+        slot: 20
+        material: EMERALD
+        name: "&fǫᴜɪᴄᴋ ʟɪsᴛ"
+        lore: ["&7Drag and drop an item here", "&7to quick list with auto price"]
+      auction:
+        slot: 22
+        material: BOOK
+        name: "&fʙᴀᴄᴋ ᴛᴏ ᴀᴜᴄᴛɪᴏɴ"
+        lore: ["&7Return to main auction menu"]
+      next:
+        slot: 26
+        material: ARROW
+        name: "&fɴᴇxᴛ"
+        lore: ["&7Go to next page"]
+      filler:
+        slots: "19,21,23-25"
+        material: GRAY_STAINED_GLASS_PANE
+        name: " "
+        lore: []
+
+  transactions:
+    title: "&0ᴛʀᴀɴsᴀᴄᴛɪᴏɴs (&f{page}&7/&f{max_page}&0)"
+    size: 54
+    item-slots: "0-44"
+    entry-bought-name: "&aʙᴏᴜɢʜᴛ"
+    entry-bought-lore:
+      - "&7Seller: &b{seller}"
+      - "&7Price: &a{price}"
+    entry-sold-name: "&cѕᴏʟᴅ"
+    entry-sold-lore:
+      - "&7Buyer: &b{buyer}"
+      - "&7Price: &a{price}"
+    controls:
+      previous:
+        slot: 45
+        material: ARROW
+        name: "&fᴘʀᴇᴠɪᴏᴜs"
+        lore: ["&7Go to previous page"]
+      auction:
+        slot: 49
+        material: OAK_SIGN
+        name: "&fʙᴀᴄᴋ ᴛᴏ ᴀᴜᴄᴛɪᴏɴ"
+        lore: ["&7Return to main auction menu"]
+      next:
+        slot: 53
+        material: ARROW
+        name: "&fɴᴇxᴛ"
+        lore: ["&7Go to next page"]
+      filler:
+        slots: "46-48,50-52"
+        material: GRAY_STAINED_GLASS_PANE
+        name: " "
+        lore: []

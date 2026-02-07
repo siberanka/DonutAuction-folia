@@ -1,0 +1,177 @@
+﻿prefix: "&8[&bDonutAuctions&8] &7"
+
+messages:
+  no-permission: "{prefix}&cBu komutu kullanma iznin yok."
+  only-player: "{prefix}&cBu komutu sadece oyuncular kullanabilir."
+  unknown-subcommand: "{prefix}&eKullanım: /ah, /ah sell <fiyat>, /ah my, /ah transactions"
+  hold-item: "{prefix}&cSatışa koymak istediğin eşyayı ana elinde tut."
+  invalid-price: "{prefix}&cGeçersiz fiyat. 0'dan büyük bir sayı gir."
+  price-required: "{prefix}&eFiyat gerekli. /ah sell <fiyat> kullan."
+  price-suggested: "{prefix}&aUltimateShop önerisi kullanıldı: &f{price}"
+  price-forced-suggested: "{prefix}&eZorunlu önerilen fiyat uygulandı: &f{price}"
+  max-listings-reached: "{prefix}&cAktif ihale limitine ulaştın veya eşya listelenemiyor."
+  listing-created: "{prefix}&a&f{item} &aeşyasını &f{price} &afiyata listeledin"
+  listing-removed: "{prefix}&eİhale kaldırıldı ve eşya iade edildi."
+  listing-bought: "{prefix}&a&f{item} &aeşyasını &f{price} &afiyata satın aldın"
+  not-enough-money: "{prefix}&cBakiyen yetersiz."
+  invalid-price-range: "{prefix}&cFiyat izin verilen aralık dışında."
+  vault-required: "{prefix}&cVault ekonomi bağlantısı bulunamadı."
+  listing-not-found: "{prefix}&cİhale bulunamadı."
+  cannot-buy-own-item: "{prefix}&cKendi ilanını satın alamazsın."
+  economy-failed: "{prefix}&cEkonomi işlemi güvenli şekilde başarısız oldu."
+  try-again: "{prefix}&cİşlem güvenli şekilde durduruldu, tekrar dene."
+  search-start: "{prefix}&eArama metnini sohbete yaz. Sıfırlamak için &fclear &eyaz."
+  search-set: "{prefix}&aArama filtresi ayarlandı: &f{query}"
+  search-cleared: "{prefix}&aArama filtresi temizlendi."
+  search-empty: "{prefix}&cArama metni boş olamaz."
+  filter-set: "{prefix}&aFiltre ayarlandı: &f{filter}"
+  not-sellable-in-ultimateshop: "{prefix}&cBu eşya UltimateShop'ta satılabilir değil."
+  quick-list-hold-item: "{prefix}&cÖnce imlecinle bir eşya tut."
+  quick-list-no-price: "{prefix}&cBu eşya için önerilen fiyat bulunamadı."
+  quick-list-success: "{prefix}&aHızlı listeleme yapıldı: &f{price}"
+  reloaded: "{prefix}&aConfig ve dil dosyaları yenilendi."
+
+filters:
+  names:
+    all: "ʜᴇᴘsɪ"
+    weapons: "sɪʟᴀʜ"
+    armor: "ᴢɪʀʜ"
+    tools: "ᴀʟᴇᴛ"
+    food: "ʏɪʏᴇᴄᴇᴋ"
+    blocks: "ʙʟᴏᴋ"
+    utility: "ᴜᴛɪʟɪᴛʏ"
+
+gui:
+  sort-modes:
+    newest: "ᴇɴ ʏᴇɴɪ"
+    oldest: "ᴇɴ ᴇsᴋɪ"
+    price_low: "ғɪʏᴀᴛ ᴅᴜsᴜᴋ ➜ ʏᴜᴋsᴇᴋ"
+    price_high: "ғɪʏᴀᴛ ʏᴜᴋsᴇᴋ ➜ ᴅᴜsᴜᴋ"
+
+  auction:
+    title: "&0ɪʜᴀʟᴇ (&f{page}&7/&f{max_page}&0)"
+    size: 54
+    item-slots: "0-44"
+    listing-lore:
+      - "&7Fiyat: &a{price}"
+      - "&7Satıcı: &b{seller}"
+      - "&7Kalan Süre: &a{time_left}"
+      - ""
+      - "&eSatın almak için tıkla"
+    own-listing-lore:
+      - "&7Fiyat: &a{price}"
+      - "&7Satıcı: &b{seller}"
+      - "&7Kalan Süre: &a{time_left}"
+      - ""
+      - "&cKaldırmak için tıkla"
+    sort-active-line: "&a• {name}"
+    sort-inactive-line: "&7• {name}"
+    filter-active-line: "&a• {name}"
+    filter-inactive-line: "&7• {name}"
+    controls:
+      previous:
+        slot: 45
+        material: ARROW
+        name: "&fᴏɴᴄᴇᴋɪ"
+        lore: ["&7Önceki sayfaya git"]
+      search:
+        slot: 49
+        material: OAK_SIGN
+        name: "&fᴀʀᴀᴍᴀ"
+        lore: ["&7İhale aramak için tıkla", "&8(Arama metni sohbetten alınır)"]
+      filter:
+        slot: 47
+        material: HOPPER
+        name: "&fғɪʟᴛʀᴇ"
+        lore: ["&7Mevcut filtre: &f{filter_name}", "&8(Kategori değiştirmek için tıkla)"]
+      sort:
+        slot: 48
+        material: ANVIL
+        name: "&fsɪʀᴀʟᴀ"
+        lore: ["&7Mevcut sıralama: &f{sort_name}", "&8(Sıralamayı değiştirmek için tıkla)"]
+      my_items:
+        slot: 51
+        material: CHEST
+        name: "&fᴇsʏᴀʟᴀʀɪɴ"
+        lore: ["&7Aktif ihalelerini yönet"]
+      transactions:
+        slot: 50
+        material: WRITABLE_BOOK
+        name: "&fɪsʟᴇᴍʟᴇʀ"
+        lore: ["&7Alım/satım geçmişini gör"]
+      next:
+        slot: 53
+        material: ARROW
+        name: "&fsᴏɴʀᴀᴋɪ"
+        lore: ["&7Sonraki sayfaya git"]
+      filler:
+        slots: "46,52"
+        material: GRAY_STAINED_GLASS_PANE
+        name: " "
+        lore: []
+
+  my-items:
+    title: "&0ᴇsʏᴀʟᴀʀɪɴ (&f{page}&7/&f{max_page}&0)"
+    size: 27
+    item-slots: "0-17"
+    controls:
+      previous:
+        slot: 18
+        material: ARROW
+        name: "&fᴏɴᴄᴇᴋɪ"
+        lore: ["&7Önceki sayfaya git"]
+      quick_list:
+        slot: 20
+        material: EMERALD
+        name: "&fʜɪᴢʟɪ ʟɪsᴛᴇ"
+        lore: ["&7Bu slota eşya sürükleyip bırak", "&7Otomatik fiyatla hızlı listele"]
+      auction:
+        slot: 22
+        material: BOOK
+        name: "&fɪʜᴀʟᴇʏᴇ ᴅᴏɴ"
+        lore: ["&7Ana ihale menüsüne dön"]
+      next:
+        slot: 26
+        material: ARROW
+        name: "&fsᴏɴʀᴀᴋɪ"
+        lore: ["&7Sonraki sayfaya git"]
+      filler:
+        slots: "19,21,23-25"
+        material: GRAY_STAINED_GLASS_PANE
+        name: " "
+        lore: []
+
+  transactions:
+    title: "&0ɪsʟᴇᴍʟᴇʀ (&f{page}&7/&f{max_page}&0)"
+    size: 54
+    item-slots: "0-44"
+    entry-bought-name: "&aSatın Alındı"
+    entry-bought-lore:
+      - "&7Satıcı: &b{seller}"
+      - "&7Fiyat: &a{price}"
+    entry-sold-name: "&cSatıldı"
+    entry-sold-lore:
+      - "&7Alıcı: &b{buyer}"
+      - "&7Fiyat: &a{price}"
+    controls:
+      previous:
+        slot: 45
+        material: ARROW
+        name: "&fᴏɴᴄᴇᴋɪ"
+        lore: ["&7Önceki sayfaya git"]
+      auction:
+        slot: 49
+        material: OAK_SIGN
+        name: "&fɪʜᴀʟᴇʏᴇ ᴅᴏɴ"
+        lore: ["&7Ana ihale menüsüne dön"]
+      next:
+        slot: 53
+        material: ARROW
+        name: "&fsᴏɴʀᴀᴋɪ"
+        lore: ["&7Sonraki sayfaya git"]
+      filler:
+        slots: "46-48,50-52"
+        material: GRAY_STAINED_GLASS_PANE
+        name: " "
+        lore: []
+
