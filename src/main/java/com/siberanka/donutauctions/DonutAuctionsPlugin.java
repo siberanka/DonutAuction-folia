@@ -43,6 +43,7 @@ public final class DonutAuctionsPlugin extends JavaPlugin {
         auctionService = new AuctionService(this);
         auctionService.load();
         auctionService.startAutoSave();
+        auctionService.startDynamicRepricing();
         menuService = new AuctionMenuService(this, languageManager, auctionService, economyHook, ultimateShopHook, filterManager);
 
         AhCommand ahCommand = new AhCommand(this, languageManager, auctionService, menuService, economyHook, ultimateShopHook);

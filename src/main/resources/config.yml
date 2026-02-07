@@ -48,6 +48,9 @@ auction:
 # TR: GUI spam/makro tiklamalara karsi temel tiklama siniri.
 security:
   click-cooldown-ms: 80
+  # EN: Cooldown for /ah sell to reduce macro spam and double-submit behavior.
+  # TR: Makro spam ve cift gonderimi azaltmak icin /ah sell bekleme suresi.
+  command-sell-cooldown-ms: 250
   # EN: Max accepted display-name length for listable items.
   # TR: Listelenebilir itemler icin max display-name uzunlugu.
   max-display-name-length: 96
@@ -85,6 +88,23 @@ ultimateshop:
   # EN: Manual player price input is ignored.
   # TR: Oyuncunun manuel fiyat girdisi yok sayilir.
   force-recommended-price-when-enabled: false
+
+  # ----------------------------------------------------------
+  # EN: Dynamic listing repricing
+  # TR: Dinamik ilan yeniden fiyatlama
+  # ----------------------------------------------------------
+  dynamic-repricing:
+    # EN: Recalculate active listing prices with current UltimateShop dynamic values.
+    # TR: Aktif ilan fiyatlarini UltimateShop dinamik degerlerine gore yeniden hesapla.
+    # EN: Default true when UltimateShop integration is used.
+    # TR: UltimateShop entegrasyonu kullaniliyorsa varsayilan true.
+    enabled: true
+    # EN: Also refresh target listing price right before purchase checks.
+    # TR: Satin alma kontrollerinden hemen once hedef ilanin fiyatini yenile.
+    refresh-before-purchase: true
+    # EN: Periodic repricing interval in seconds.
+    # TR: Periyodik yeniden fiyatlama araligi (saniye).
+    interval-seconds: 300
 
   # ----------------------------------------------------------
   # EN: Base price multiplier

@@ -21,6 +21,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalDouble;
 import java.util.Locale;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 public final class AhCommand implements CommandExecutor, TabCompleter {
 
@@ -30,6 +33,7 @@ public final class AhCommand implements CommandExecutor, TabCompleter {
     private final AuctionMenuService menuService;
     private final EconomyHook economy;
     private final UltimateShopHook ultimateShop;
+    private final ConcurrentMap<UUID, Long> sellCooldown = new ConcurrentHashMap<>();
 
     public AhCommand(
             DonutAuctionsPlugin plugin,
@@ -84,6 +88,11 @@ public final class AhCommand implements CommandExecutor, TabCompleter {
     }
 
     private void handleSell(Player player, String[] args) {
+        if (isOnSellCooldown(player.getUniqueId())) {
+            player.sendMessage(lang.text("messages.sell-cooldown"));
+            return;
+        }
+
         ItemStack hand = player.getInventory().getItemInMainHand();
         if (hand.getType() == Material.AIR) {
             player.sendMessage(lang.text("messages.hold-item"));
@@ -181,6 +190,7 @@ public final class AhCommand implements CommandExecutor, TabCompleter {
                 "item", toList.getType().name(),
                 "price", economy.format(price)
         )));
+        markSellCooldown(player.getUniqueId());
         menuService.openAuction(player, 1);
     }
 
@@ -234,5 +244,16 @@ public final class AhCommand implements CommandExecutor, TabCompleter {
         // /ah sell <amount>
         // /ah sell <ignoredPrice> <amount>
         return args.length >= 3 ? args[2] : args[1];
+    }
+
+    private boolean isOnSellCooldown(UUID playerId) {
+        long now = System.currentTimeMillis();
+        long cooldown = Math.max(50L, plugin.getConfig().getLong("security.command-sell-cooldown-ms", 250L));
+        Long prev = sellCooldown.get(playerId);
+        return prev != null && (now - prev) < cooldown;
+    }
+
+    private void markSellCooldown(UUID playerId) {
+        sellCooldown.put(playerId, System.currentTimeMillis());
     }
 }

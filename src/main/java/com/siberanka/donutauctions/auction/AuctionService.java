@@ -3,6 +3,7 @@ package com.siberanka.donutauctions.auction;
 import com.siberanka.donutauctions.DonutAuctionsPlugin;
 import com.siberanka.donutauctions.hook.EconomyHook;
 import com.siberanka.donutauctions.util.AtomicFileUtil;
+import com.siberanka.donutauctions.util.SchedulerAdapter;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
@@ -50,6 +51,8 @@ public final class AuctionService {
 
     private int autosaveTaskId = -1;
     private Object foliaAutosaveTask;
+    private int dynamicRepriceTaskId = -1;
+    private Object foliaDynamicRepriceTask;
     private long operationTtlMillis = TimeUnit.MINUTES.toMillis(10);
     private final Object mutex = new Object();
 
@@ -142,12 +145,35 @@ public final class AuctionService {
         }
     }
 
+    public void startDynamicRepricing() {
+        if (dynamicRepriceTaskId != -1 || foliaDynamicRepriceTask != null) {
+            return;
+        }
+        if (!shouldUseDynamicRepricing()) {
+            return;
+        }
+        if (!plugin.ultimateShopHook().isActive()) {
+            return;
+        }
+
+        long periodTicks = Math.max(20L, dynamicRepriceIntervalSeconds() * 20L);
+        if (!scheduleDynamicWithFoliaAsync(periodTicks)) {
+            dynamicRepriceTaskId = Bukkit.getScheduler().runTaskTimerAsynchronously(
+                    plugin,
+                    () -> SchedulerAdapter.runSync(plugin, this::refreshAllListingPricesSafe),
+                    periodTicks,
+                    periodTicks
+            ).getTaskId();
+        }
+    }
+
     public void shutdown() {
         cancelFoliaAutosave();
         if (autosaveTaskId != -1) {
             Bukkit.getScheduler().cancelTask(autosaveTaskId);
             autosaveTaskId = -1;
         }
+        cancelDynamicReprice();
         saveSafely();
         synchronized (mutex) {
             listings.clear();
@@ -162,7 +188,9 @@ public final class AuctionService {
             Bukkit.getScheduler().cancelTask(autosaveTaskId);
             autosaveTaskId = -1;
         }
+        cancelDynamicReprice();
         startAutoSave();
+        startDynamicRepricing();
     }
 
     public synchronized Optional<AuctionListing> createListing(Player seller, ItemStack item, double price) {
@@ -208,6 +236,10 @@ public final class AuctionService {
     public synchronized PurchaseResult purchase(UUID listingId, Player buyer, EconomyHook economy, String operationId) {
         if (operationSeen(operationId)) {
             return PurchaseResult.fail("messages.try-again");
+        }
+
+        if (shouldRefreshBeforePurchase() && plugin.ultimateShopHook().isActive()) {
+            refreshListingPriceForPurchase(listingId, buyer);
         }
 
         AuctionListing listing = listings.get(listingId);
@@ -439,6 +471,132 @@ public final class AuctionService {
         } catch (Throwable ignored) {
         } finally {
             foliaAutosaveTask = null;
+        }
+    }
+
+    private void cancelDynamicReprice() {
+        if (dynamicRepriceTaskId != -1) {
+            Bukkit.getScheduler().cancelTask(dynamicRepriceTaskId);
+            dynamicRepriceTaskId = -1;
+        }
+        if (foliaDynamicRepriceTask != null) {
+            try {
+                foliaDynamicRepriceTask.getClass().getMethod("cancel").invoke(foliaDynamicRepriceTask);
+            } catch (Throwable ignored) {
+            } finally {
+                foliaDynamicRepriceTask = null;
+            }
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private boolean scheduleDynamicWithFoliaAsync(long periodTicks) {
+        try {
+            Object asyncScheduler = Bukkit.getServer().getClass().getMethod("getAsyncScheduler").invoke(Bukkit.getServer());
+            long periodMillis = Math.max(50L, periodTicks * 50L);
+            Consumer<Object> consumer = ignored -> SchedulerAdapter.runSync(plugin, this::refreshAllListingPricesSafe);
+
+            try {
+                Object task = asyncScheduler.getClass().getMethod(
+                                "runAtFixedRate",
+                                org.bukkit.plugin.Plugin.class,
+                                Consumer.class,
+                                long.class,
+                                long.class,
+                                TimeUnit.class
+                        )
+                        .invoke(asyncScheduler, plugin, consumer, periodMillis, periodMillis, TimeUnit.MILLISECONDS);
+                foliaDynamicRepriceTask = task;
+                return true;
+            } catch (NoSuchMethodException ignored) {
+                Object task = asyncScheduler.getClass().getMethod(
+                                "runAtFixedRate",
+                                org.bukkit.plugin.Plugin.class,
+                                Consumer.class,
+                                Duration.class,
+                                Duration.class
+                        )
+                        .invoke(asyncScheduler, plugin, consumer, Duration.ofMillis(periodMillis), Duration.ofMillis(periodMillis));
+                foliaDynamicRepriceTask = task;
+                return true;
+            }
+        } catch (Throwable ignored) {
+            return false;
+        }
+    }
+
+    private long dynamicRepriceIntervalSeconds() {
+        return Math.max(5L, plugin.getConfig().getLong("ultimateshop.dynamic-repricing.interval-seconds", 300L));
+    }
+
+    private boolean shouldUseDynamicRepricing() {
+        return plugin.getConfig().getBoolean("ultimateshop.dynamic-repricing.enabled", true);
+    }
+
+    private boolean shouldRefreshBeforePurchase() {
+        return plugin.getConfig().getBoolean("ultimateshop.dynamic-repricing.refresh-before-purchase", true);
+    }
+
+    private synchronized void refreshListingPriceForPurchase(UUID listingId, Player buyer) {
+        AuctionListing listing = listings.get(listingId);
+        if (listing == null) {
+            return;
+        }
+        double newPrice = plugin.ultimateShopHook().suggestAuctionPrice(listing.item(), buyer).orElse(0D);
+        if (!Double.isFinite(newPrice) || newPrice <= 0D) {
+            return;
+        }
+        double rounded = roundCurrency(newPrice);
+        if (rounded <= 0D || Math.abs(rounded - listing.price()) < 0.0001D) {
+            return;
+        }
+        AuctionListing updated = new AuctionListing(
+                listing.id(),
+                listing.sellerUuid(),
+                listing.sellerName(),
+                listing.item().clone(),
+                rounded,
+                listing.createdAt(),
+                listing.expiresAt()
+        );
+        listings.put(listing.id(), updated);
+    }
+
+    private void refreshAllListingPricesSafe() {
+        try {
+            refreshAllListingPrices();
+        } catch (Exception ex) {
+            plugin.getLogger().warning("Dynamic repricing failed safely: " + ex.getClass().getSimpleName());
+        }
+    }
+
+    private synchronized void refreshAllListingPrices() {
+        if (!shouldUseDynamicRepricing() || !plugin.ultimateShopHook().isActive()) {
+            return;
+        }
+        if (listings.isEmpty()) {
+            return;
+        }
+        for (Map.Entry<UUID, AuctionListing> entry : listings.entrySet()) {
+            AuctionListing listing = entry.getValue();
+            double newPrice = plugin.ultimateShopHook().suggestAuctionPrice(listing.item()).orElse(0D);
+            if (!Double.isFinite(newPrice) || newPrice <= 0D) {
+                continue;
+            }
+            double rounded = roundCurrency(newPrice);
+            if (rounded <= 0D || Math.abs(rounded - listing.price()) < 0.0001D) {
+                continue;
+            }
+            AuctionListing updated = new AuctionListing(
+                    listing.id(),
+                    listing.sellerUuid(),
+                    listing.sellerName(),
+                    listing.item().clone(),
+                    rounded,
+                    listing.createdAt(),
+                    listing.expiresAt()
+            );
+            listings.put(listing.id(), updated);
         }
     }
 

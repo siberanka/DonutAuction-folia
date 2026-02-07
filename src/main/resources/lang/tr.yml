@@ -7,6 +7,7 @@ messages:
   hold-item: "{prefix}&cSatışa koymak istediğin eşyayı ana elinde tut."
   invalid-price: "{prefix}&cGeçersiz fiyat. 0'dan büyük bir sayı gir."
   invalid-amount: "{prefix}&cGeçersiz miktar. 1 ile elindeki eşya miktarı arasında bir değer gir."
+  sell-cooldown: "{prefix}&cYeni bir ilan oluşturmadan önce biraz bekle."
   price-required: "{prefix}&eFiyat gerekli. /ah sell <fiyat> kullan."
   price-suggested: "{prefix}&aUltimateShop önerisi kullanıldı: &f{price}"
   price-forced-suggested: "{prefix}&eZorunlu önerilen fiyat uygulandı: &f{price}"

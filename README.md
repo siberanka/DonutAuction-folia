@@ -15,6 +15,7 @@ A DonutSMP-style `/ah` auction plugin for modern Paper/Folia servers.
   - Base auction multiplier from sell price
   - Per-enchantment level multipliers
   - Optional dynamic-sale increment
+  - Optional dynamic listing repricing (periodic + pre-purchase refresh)
   - Optional command trigger on dynamic-sale update (`%material%`, `%amount%`)
 - Folia-compatible scheduling path (`folia-supported: true`)
 
