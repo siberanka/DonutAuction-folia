@@ -3,9 +3,10 @@
 messages:
   no-permission: "{prefix}&cBu komutu kullanma iznin yok."
   only-player: "{prefix}&cBu komutu sadece oyuncular kullanabilir."
-  unknown-subcommand: "{prefix}&eKullanım: /ah, /ah sell <fiyat>, /ah my, /ah transactions"
+  unknown-subcommand: "{prefix}&eKullanım: /ah, /ah sell <fiyat> <miktar>, /ah my, /ah transactions"
   hold-item: "{prefix}&cSatışa koymak istediğin eşyayı ana elinde tut."
   invalid-price: "{prefix}&cGeçersiz fiyat. 0'dan büyük bir sayı gir."
+  invalid-amount: "{prefix}&cGeçersiz miktar. 1 ile elindeki eşya miktarı arasında bir değer gir."
   price-required: "{prefix}&eFiyat gerekli. /ah sell <fiyat> kullan."
   price-suggested: "{prefix}&aUltimateShop önerisi kullanıldı: &f{price}"
   price-forced-suggested: "{prefix}&eZorunlu önerilen fiyat uygulandı: &f{price}"

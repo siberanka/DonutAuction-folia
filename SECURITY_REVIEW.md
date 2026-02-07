@@ -1,198 +1,152 @@
-﻿# DonutAuctions 1.0.0 Security Review (Spigot/Paper/Purpur/Folia 1.21.11)
+﻿# DonutAuctions Security Review (v1.0.0, Updated)
 
-## 1) Attack Surface Haritasi
+## Attack Surface Haritası
 
-### Event katmani
-- Giris noktasi: `InventoryClick`, `InventoryDrag`, `InventoryClose`, `PlayerQuit`, `AsyncPlayerChat`
-- Risk: GUI manipulasyonu, state desync, spam/DoS, async thread misuse
-- Savunma:
-  - GUI acikken default `cancel=true`
-  - Holder dogrulamasi (`AuctionMenuHolder`)
-  - Drag tam blok + quick-list slotu icin kontrollu whitelist
-  - Async chat girdisi sync scheduler ile isleniyor
-  - Quit/close lifecycle temizligi
+### Event yüzeyi
+- Giriş noktaları: `InventoryClick`, `InventoryDrag`, `InventoryClose`, `PlayerQuit`, `AsyncPlayerChat`
+- Risk: GUI manipülasyonu, click/drag spam, state desync
+- Savunma: holder doğrulaması, secure default cancel, kontrollü whitelist, click cooldown, close/quit state cleanup
 
-### Komut katmani
-- Giris noktasi: `/ah`, `/ah sell`, `/ah my`, `/ah transactions`, `/ah reload`
-- Risk: permission bypass, hatali fiyat/veri, command spam
-- Savunma:
-  - Permission kontrolleri
-  - Numeric + finite + min/max fiyat validasyonu
-  - UltimateShop sellable zorlamasi (opsiyonel)
-  - UltimateShop suggested-price zorlamasi (opsiyonel)
+### Komut yüzeyi
+- Giriş noktaları: `/ah`, `/ah sell`, `/ah my`, `/ah transactions`, `/ah reload`
+- Risk: malformed input, permission abuse, ekonomik manipülasyon
+- Savunma: permission checks, numeric/finiteness/range validation, amount validation, UltimateShop sellability/forced-price policies
 
-### GUI/Menu katmani
-- Giris noktasi: custom control item aksiyonlari (`actionKey`), listing id (`listingKey`)
-- Risk: click type abuse, slot tasmasi, item movement desync
-- Savunma:
-  - Slot bounds kontrolu
-  - Rate-limited click throttle
-  - Action whitelist mantigi
-  - Menulerde fallback/fail-safe close
+### GUI/menü yüzeyi
+- Giriş noktaları: custom controls (`action` PDC), listing id (`listing-id` PDC)
+- Risk: click-type bypass, slot/state bozulması
+- Savunma: `InventoryHolder` doğrulaması, slot bound check, action whitelist, failure-safe close
 
-### Veri katmani
-- Giris noktasi: `auction-data.yml`, autosave, backup
-- Risk: crash sirasinda veri kaybi, bozuk dosya, yarim write
-- Savunma:
-  - Atomic write (tmp + fsync + move)
-  - Commit marker + schema version
-  - Backup rotation
-  - Bozuk/eksik commit dosyasinda latest backup restore
+### Veri katmanı
+- Giriş noktaları: `auction-data.yml`, autosave scheduler, backup rotation
+- Risk: veri kaybı, bozuk dosya, yarım commit
+- Savunma: atomic write (tmp + fsync + replace), schema + commit marker, bozuk dosyada backup restore
 
-### Ag/packet katmani
-- Risk: high ping, paket gecikmesi, GUI state uyumsuzlugu
-- Savunma:
-  - Server-authoritative commit akisi
-  - `synchronized` transaction metotlari
-  - click cooldown
+### Ağ/packet yüzeyi
+- Risk: high ping, packet reorder, double interaction
+- Savunma: server-authoritative transaction, synchronized service methods, listing removal yarışını önleyen akış
 
 ### 3. parti entegrasyonlar
 - Vault, UltimateShop
-- Risk: provider yoklugu, API degisikligi, command chain riski
-- Savunma:
-  - Soft-depend + ready checks
-  - Reflection fallback
-  - Dynamic command sanitize (`%material%` temizleme + tehlikeli ayirac bloklama)
+- Risk: API signature drift, soft-dependency eksikliği, command abuse
+- Savunma: reflective compatibility strategy, null-safe fallback, command sanitization (`%material%`, blocked separators)
 
-## 2) Bulgu Listesi (Kritiklik / Etki / Kok Neden / Fix / Regression)
+## Bulgu Listesi
 
-1. Kritiklik: High
-- Etki: Folia enable crash
-- Kok neden: Folia'da Bukkit async timer kullanimi
-- Fix: Folia AsyncScheduler kullanimi + Bukkit fallback
-- Regression riski: Dusuk
+1) **Kritiklik: High**
+- Etki: Folia üzerinde scheduler kaynaklı enable/runtime kırılması
+- Kök neden: scheduler uyumluluğu ve reload sonrası runtime task periyodunun stale kalabilmesi
+- Fix: Folia async scheduler + Bukkit fallback; `/ah reload` sonrası autosave scheduler reschedule
+- Regression riski: Düşük
 
-2. Kritiklik: High
-- Etki: GUI desync / dupe sinifi item hareket manip.
-- Kok neden: GUI acikken alt inventory etkileşim ihtimali
-- Fix: secure default cancel + holder dogrulama + drag kapsami
-- Regression riski: Dusuk
+2) **Kritiklik: High**
+- Etki: GUI üzerinden manipülasyon/desync sınıfı
+- Kök neden: GUI açıkken tüm click tiplerinin doğru ayrıştırılamaması riski
+- Fix: default-cancel + top inventory whitelist + bottom inventory sadece güvenli aksiyonlar
+- Regression riski: Düşük/Orta (çok agresif kilitleme UX'i etkileyebilir)
 
-3. Kritiklik: High
-- Etki: ekonomi tutarsizligi/double-spend sinifi
-- Kok neden: satin alma adimlarinin daginik olmasi
-- Fix: `AuctionService.purchase()` transaction modeli (validate -> withdraw -> deposit -> remove -> log)
-- Regression riski: Dusuk
+3) **Kritiklik: High**
+- Etki: ekonomi bütünlüğü / dupe sınıfı risk
+- Kök neden: transaction akışında doğrulama/rollback eksikliği olasılığı
+- Fix: `purchase` tek transaction akışı, başarısız transferlerde güvenli geri dönüş, listing bazlı tekil commit
+- Regression riski: Düşük
 
-4. Kritiklik: Medium
-- Etki: crash/restart sonrasi veri kaybi
-- Kok neden: bozuk primary dosyada geri donus mekanizmasi eksikligi
-- Fix: backup rotation + bozuk committe latest backup restore
-- Regression riski: Dusuk
+4) **Kritiklik: Medium**
+- Etki: stack fiyatlamada yanlış toplam (haksız kazanç veya yanlış fiyat)
+- Kök neden: birim yerine stack üzerinden öneri ve multiplier uygulanması
+- Fix: birim fiyat + bağımsız enchant bonusu + `* amount` modeline geçiş
+- Regression riski: Düşük
 
-5. Kritiklik: Medium
-- Etki: lag/DoS sinifi metadata sismirme
-- Kok neden: listelenen item meta/lore/PDC sinirlari yoktu
-- Fix: createListing icinde meta guvenlik limitleri
-- Regression riski: Orta (asiri metali itemler listeye alinmaz)
+5) **Kritiklik: Medium**
+- Etki: komut davranışı belirsizliği (`force-recommended-price` açıkken amount parse)
+- Kök neden: argüman düzeni tek format varsayımı
+- Fix: force modunda hem `/ah sell <amount>` hem `/ah sell <ignoredPrice> <amount>` desteği
+- Regression riski: Düşük
 
-6. Kritiklik: Medium
-- Etki: config command zinciri abuse sinifi
-- Kok neden: dynamic-sale-command stringlerinin yetersiz filtrelenmesi
-- Fix: tehlikeli karakter bloklama + sanitize + console authoritative dispatch
-- Regression riski: Dusuk
+6) **Kritiklik: Medium**
+- Etki: veri kaybı dayanıklılığı zayıflığı
+- Kök neden: bozuk primary dosyada otomatik recovery eksikliği
+- Fix: latest backup restore path eklendi
+- Regression riski: Düşük
 
-7. Kritiklik: Medium
-- Etki: GUI action state stale kalmasi (filter degisince gorunum yenilenmemesi)
-- Kok neden: filter action sonrası menu refresh eksigi
-- Fix: filter cycle sonrası aninda `openAuction`
-- Regression riski: Dusuk
+7) **Kritiklik: Medium**
+- Etki: DoS/memory baskısı (aşırı lore/meta)
+- Kök neden: listelenen item meta sınırlarının olmaması
+- Fix: display name/lore/PDC key limitleri ve validation
+- Regression riski: Orta (aşırı meta itemler reddedilir)
 
-8. Kritiklik: Low
-- Etki: UX / state tutarsizligi
-- Kok neden: your-items drag quick-list slotunun event katmaninda acik secik yakalanmamasi
-- Fix: `InventoryDrag` icinde quick-list slotu whitelisti
-- Regression riski: Dusuk
+## Kod Değişiklik Stratejisi
 
-## 3) Uygulanan Kod Degisiklik Stratejisi
+- Transaction ve idempotency: merkezi service akışı, synchronized state transitions
+- GUI fail-safe: cancel-by-default, whitelist-only işlem modeli
+- Durability: atomic persistence + backup rotation + restore
+- API uyumluluk: UltimateShop için yeni/eski method signature destekleri
+- Runtime stability: reload sonrası scheduler yeniden planlama
 
-- Thread ve scheduler:
-  - Folia uyumlu autosave scheduler
-  - Async chat -> sync commit handoff
+## Dupe/Exploit Senaryo Matrisi (Soyut)
 
-- Transaction ve idempotency:
-  - Satin alma tek transaction metodunda
-  - Operation cache + click cooldown ile tekrar islem azaltildi
+- Yüksek ping / packet reorder
+  - Etki: state desync
+  - Kök neden: istemci tarafına güvenme
+  - Fix: server-authoritative commit + single service gate
+  - Test: gecikmeli ortamda aynı listing çoklu etkileşim
 
-- GUI fail-safe:
-  - Cancel by default
-  - Holder ve slot dogrulamasi
-  - Drag event kapsami
-
-- Durability:
-  - Atomic write
-  - Backup rotation
-  - Corrupt primary dosyada backup restore
-
-- Input/metadata guvenligi:
-  - Fiyat ve sayisal validasyonlar
-  - Item meta/lore/PDC limitleri
-  - Dynamic command sanitization
-
-## 4) Dupe/Exploit Senaryo Matrisi (Soyut)
-
-- Yuksek ping / paket sirasi bozulmasi
-  - Etki: state desync sinifi
-  - Kok neden: client-side goruntuye guvenme
-  - Fix: server-authoritative listing/purchase commit
-  - Test: gecikmeli baglanti + ayni anda coklu click
-
-- Macro / drag spam
-  - Etki: DoS ve tekrarli islem sinifi
-  - Kok neden: throttle yoklugu
+- Auto-click / drag spam
+  - Etki: işlem seli, lag
+  - Kök neden: rate-limit eksikliği
   - Fix: click cooldown + drag cancel
-  - Test: otomasyonla burst click/drag
+  - Test: burst click/drag with macro
 
-- Shift/number/offhand manip.
-  - Etki: GUI bypass sinifi
-  - Kok neden: event kapsami eksigi
-  - Fix: GUI acikken tum click default cancel
-  - Test: tum click tiplerini matrix halinde dene
+- Shift/number/offhand manipülasyonu
+  - Etki: GUI bypass sınıfı
+  - Kök neden: event türlerinin eksik kapsanması
+  - Fix: yasak click türleri bloklu, whitelist aksiyonlar sınırlı
+  - Test: tüm click türleri matrisi
 
-- Death/respawn/teleport/world change
-  - Etki: menu-state orphan, item kaybi sinifi
-  - Kok neden: lifecycle baglari zayif olabilir
-  - Fix: menu close fail-safe + commit server-side
-  - Test: menu acikken olum/isınlanma dunyadegisimi
+- Ölüm/respawn/teleport/world change
+  - Etki: stale GUI state, item akışı bozulması
+  - Kök neden: lifecycle edge-case yönetimi
+  - Fix: close/quit cleanup + server-authoritative item movement
+  - Test: açık GUI ile ölüm/ışınlanma/oyundan çıkış
 
-- Plugin reload/disable/server stop
-  - Etki: yarim islem/veri kaybi sinifi
-  - Kok neden: pending write flush eksigi
-  - Fix: onDisable shutdown + save + task cancel + menu close
-  - Test: reload ve stop senaryolari altinda veri tutarlilik kontrolu
+- Reload/disable/stop sırasında yarım işlem
+  - Etki: veri kaybı veya state orphan
+  - Kök neden: task/scheduler flush eksikliği
+  - Fix: onDisable shutdown, autosave cancel, save flush, reload reschedule
+  - Test: reload-stop-kill altı persist doğrulaması
 
 - Beklenmedik exception
-  - Etki: state yarim kalma
-  - Kok neden: handler korumalari eksigi
-  - Fix: kritik click path try/catch + safe close + rate-limited log
+  - Etki: menü ve işlem akışı kırılması
+  - Kök neden: kritik handler guard eksikliği
+  - Fix: try/catch fail-safe, rate-limited warning, safe close
   - Test: controlled exception injection
 
-## 5) Test Matrisi
+## Test Matrisi
 
-1. GUI click tipi matrisi: normal, shift, number-key, double-click, drag
-2. Iki oyuncu ayni ilani eszamanli satin alma
-3. Yuksek ping simulasyonu altinda listeleme/satin alma
-4. TPS dusukken click burst + search spam
-5. Reload/disable sirasinda acik menuler
-6. Kill/stop aninda autosave flush davranisi
-7. Bozuk `auction-data.yml` ile acilis (backup restore dogrulamasi)
-8. UltimateShop aktif/pasif + force price + only-sellable kombinasyonlari
-9. Asiri lore/PDC meta item listeleme denemeleri
-10. Dynamic sale command sanitize denemeleri
+1. GUI click türleri: normal, shift, number key, offhand, double click, drag
+2. Eşzamanlı satın alma: iki oyuncu tek listing
+3. Yüksek ping ve düşük TPS altında listing/purchase
+4. Quick-list sürükle-bırak (full stack / partial stack)
+5. `/ah sell <fiyat> <miktar>` valid/invalid amount durumları
+6. Force-suggested modunda amount parse formatları
+7. Reload sırasında açık menü ve scheduler davranışı
+8. Crash/kill sonrası `auction-data.yml` + backup restore doğrulaması
+9. Bozuk veri dosyasıyla açılış
+10. UltimateShop offline/online ve API fallback testleri
 
-## 6) Performans Analizi
+## Performans Analizi
 
-- Listing goruntuleme: O(n log n) sort + O(n) filter
-- Transaction cache: TTL cleanup ile bounded
-- Transaction kayit listesi: config ile bounded (`transactions-max`)
-- Autosave periyodik ve ayarlanabilir (`storage.autosave-ticks`)
-- Log spam: rate-limited warning
+- Listing görüntüleme: O(n log n) sort + O(n) filter
+- Transaction listesi bounded (`transactions-max`)
+- Autosave periyodu config-driven
+- Log spam rate-limited
+- Meta kontrolü O(lore-size), sabit sınırlarla bounded
 
-## 7) Patch Sonrasi Yeni Dupe/Desync Acabilir mi?
+## Patch Sonrası Dupe/Desync Yeniden Değerlendirme
 
-- Cancel mantigi: Yeni patch GUI tarafinda daha kati, yeni bypass acmiyor.
-- Rollback: Ekonomi rollback yolunda ek transfer adimlari degismedi; listing kaynagi synchronized.
-- Idempotency: Operation key + listing removal + cooldown kombinasyonu korunuyor.
-- Thread gecisi: Bukkit API commitleri sync pathte; async yalnizca I/O/chat bridge.
+- Cancel mantığı: default deny, whitelist allow; yeni bypass gözlenmedi.
+- Rollback: ekonomi başarısızlığı senaryolarında güvenli geri dönüş korunuyor.
+- Idempotency: listing-level transactional akış + click cooldown korunuyor.
+- Thread geçişi: Bukkit API kritik işlemleri main-thread uyumlu pathlerde; async yalnız I/O/scheduler katmanında.
 
-Sonuc: Yeni patch setinde yeni bir dupe/desync sinifi acildigina dair bulgu yok; kalan riskler daha cok ekonomi provider davranisina ve 3. parti plugin API farkliliklarina bagli.
+Sonuç: mevcut patch seti yeni bir dupe/desync sınıfı açmadan güvenlik, kararlılık ve dayanıklılığı artırıyor. Kalan riskler büyük ölçüde 3. parti ekonomi/mağaza sağlayıcılarının davranışına bağlıdır.

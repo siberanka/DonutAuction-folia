@@ -35,10 +35,13 @@ A DonutSMP-style `/ah` auction plugin for modern Paper/Folia servers.
 
 ## Commands
 - `/ah` -> open auction menu
-- `/ah sell <price>` -> list item in main hand
+- `/ah sell <price> <amount>` -> list `<amount>` items from main hand
 - `/ah my` or `/ah myitems` -> open your active listings
 - `/ah transactions` or `/ah tx` -> open transaction history
 - `/ah reload` -> reload plugin config/language
+
+If `ultimateshop.force-recommended-price-when-enabled: true`, use:
+- `/ah sell <amount>` -> price is auto-forced from UltimateShop.
 
 ## Permissions
 - `donutauctions.command.ah` (default: true)
@@ -59,9 +62,10 @@ language: en
 ## Pricing Model (UltimateShop)
 Default formula:
 
-1. `plain_auction_value = sell_price * base-auction-multiplier`
-2. For each enchantment: `bonus = plain_auction_value * enchant_level_multiplier`
-3. Final price: `plain_auction_value + sum(all bonuses)`
+1. `plain_unit_value = unit_sell_price * base-price-multiplier`
+2. For each enchantment: `unit_bonus = plain_unit_value * enchant_level_multiplier`
+3. `unit_total = plain_unit_value + sum(all unit bonuses)`
+4. `final_price = unit_total * amount`
 
 Each enchantment bonus is calculated independently from the plain value.
 

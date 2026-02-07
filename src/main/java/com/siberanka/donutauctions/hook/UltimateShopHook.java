@@ -10,6 +10,8 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.Plugin;
 
 import java.lang.reflect.Method;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 import java.util.Map;
 import java.util.OptionalDouble;
@@ -59,24 +61,31 @@ public final class UltimateShopHook {
     }
 
     public boolean isSellable(ItemStack item, org.bukkit.entity.Player player) {
-        return findSellPrice(item, player).orElse(0D) > 0D;
+        if (item == null || item.getType() == Material.AIR) {
+            return false;
+        }
+        ItemStack unit = item.clone();
+        unit.setAmount(1);
+        return findSellPrice(unit, player).orElse(0D) > 0D;
     }
 
     public double calculateRecommendedAuctionPrice(ItemStack item, org.bukkit.entity.Player player) {
-        double baseSellPrice = findSellPrice(item, player).orElseGet(() -> {
-            String material = item.getType().name();
-            if (plugin.getConfig().isSet("ultimateshop.material-base-prices." + material)) {
-                return plugin.getConfig().getDouble("ultimateshop.material-base-prices." + material);
-            }
-            return plugin.getConfig().getDouble("ultimateshop.fallback-material-prices." + material, 0D);
-        });
-        if (baseSellPrice <= 0D) {
+        if (item == null || item.getType() == Material.AIR || player == null) {
             return 0D;
         }
 
-        // Plain (non-enchanted) auction value.
-        double plainAuctionValue = baseSellPrice * Math.max(0D, baseAuctionMultiplier);
-        double enchantBonusTotal = 0D;
+        int quantity = Math.max(1, item.getAmount());
+        ItemStack unitItem = item.clone();
+        unitItem.setAmount(1);
+
+        double unitSellPrice = findSellPrice(unitItem, player).orElseGet(() -> fallbackMaterialSellPrice(unitItem.getType()));
+        if (!Double.isFinite(unitSellPrice) || unitSellPrice <= 0D) {
+            return 0D;
+        }
+
+        // Per-item plain value.
+        double plainAuctionValueUnit = unitSellPrice * Math.max(0D, baseAuctionMultiplier);
+        double enchantBonusTotalUnit = 0D;
 
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
@@ -93,13 +102,14 @@ public final class UltimateShopHook {
                         continue;
                     }
                     double perLevel = enchSection.getDouble(String.valueOf(entry.getValue()), 0D);
-                    // Each enchantment bonus is calculated independently from plain value.
-                    enchantBonusTotal += (plainAuctionValue * perLevel);
+                    // Each enchantment bonus is calculated independently from plain per-item value.
+                    enchantBonusTotalUnit += (plainAuctionValueUnit * perLevel);
                 }
             }
         }
 
-        return Math.max(0D, plainAuctionValue + enchantBonusTotal);
+        double unitFinal = Math.max(0D, plainAuctionValueUnit + enchantBonusTotalUnit);
+        return roundCurrency(unitFinal * quantity);
     }
 
     public void recordSale(ItemStack item, int amount) {
@@ -108,7 +118,10 @@ public final class UltimateShopHook {
         }
 
         try {
-            Class<?> clazz = Class.forName("cn.superiormc.ultimateshop.api.shop.ShopHelper");
+            Class<?> clazz = loadShopHelperClass();
+            if (clazz == null) {
+                return;
+            }
             Method method = findMethod(clazz, "increaseSoldAmount", ItemStack.class, int.class);
             if (method != null) {
                 method.invoke(null, item, amount);
@@ -133,7 +146,20 @@ public final class UltimateShopHook {
         }
 
         try {
-            Class<?> clazz = Class.forName("cn.superiormc.ultimateshop.api.shop.ShopHelper");
+            Class<?> clazz = loadShopHelperClass();
+            if (clazz == null) {
+                return OptionalDouble.empty();
+            }
+
+            // UltimateShop 4.2.3+: getSellPrices(ItemStack[], Player, int) -> GiveResult
+            Method arrayMethod = findMethod(clazz, "getSellPrices", ItemStack[].class, org.bukkit.entity.Player.class, int.class);
+            if (arrayMethod != null) {
+                Object out = arrayMethod.invoke(null, new ItemStack[]{item.clone()}, player, 1);
+                OptionalDouble extracted = extractGiveResultPrice(out);
+                if (extracted.isPresent()) {
+                    return extracted;
+                }
+            }
 
             Method singleMethod = findMethod(clazz, "getSellPrice", ItemStack.class, org.bukkit.entity.Player.class);
             if (singleMethod != null) {
@@ -157,6 +183,21 @@ public final class UltimateShopHook {
         return OptionalDouble.empty();
     }
 
+    private double fallbackMaterialSellPrice(Material material) {
+        String id = material.name();
+        if (plugin.getConfig().isSet("ultimateshop.material-base-prices." + id)) {
+            return plugin.getConfig().getDouble("ultimateshop.material-base-prices." + id, 0D);
+        }
+        return plugin.getConfig().getDouble("ultimateshop.fallback-material-prices." + id, 0D);
+    }
+
+    private double roundCurrency(double value) {
+        if (!Double.isFinite(value)) {
+            return 0D;
+        }
+        return BigDecimal.valueOf(value).setScale(2, RoundingMode.HALF_UP).doubleValue();
+    }
+
     private Method findMethod(Class<?> owner, String name, Class<?>... params) {
         try {
             Method method = owner.getMethod(name, params);
@@ -164,6 +205,68 @@ public final class UltimateShopHook {
             return method;
         } catch (NoSuchMethodException ex) {
             return null;
+        }
+    }
+
+    private Class<?> loadShopHelperClass() {
+        try {
+            return Class.forName("cn.superiormc.ultimateshop.api.ShopHelper");
+        } catch (ClassNotFoundException ignored) {
+        }
+        try {
+            return Class.forName("cn.superiormc.ultimateshop.api.shop.ShopHelper");
+        } catch (ClassNotFoundException ignored) {
+            return null;
+        }
+    }
+
+    private OptionalDouble extractGiveResultPrice(Object giveResult) {
+        if (giveResult == null) {
+            return OptionalDouble.empty();
+        }
+        try {
+            Method getResultMap = giveResult.getClass().getMethod("getResultMap");
+            Object mapObj = getResultMap.invoke(giveResult);
+            if (!(mapObj instanceof Map<?, ?> map) || map.isEmpty()) {
+                return OptionalDouble.empty();
+            }
+
+            double economyTotal = 0D;
+            double fallbackTotal = 0D;
+
+            for (Map.Entry<?, ?> entry : map.entrySet()) {
+                Object key = entry.getKey();
+                Object value = entry.getValue();
+                double amount = 0D;
+                if (value instanceof BigDecimal decimal) {
+                    amount = decimal.doubleValue();
+                } else if (value instanceof Number number) {
+                    amount = number.doubleValue();
+                }
+                if (amount <= 0D || !Double.isFinite(amount)) {
+                    continue;
+                }
+                fallbackTotal += amount;
+
+                // Prefer economy-like thing types when available.
+                if (key != null) {
+                    try {
+                        Object typeObj = key.getClass().getField("type").get(key);
+                        if (typeObj != null) {
+                            String typeName = String.valueOf(typeObj);
+                            if (typeName.contains("ECONOMY")) {
+                                economyTotal += amount;
+                            }
+                        }
+                    } catch (ReflectiveOperationException ignored) {
+                    }
+                }
+            }
+
+            double chosen = economyTotal > 0D ? economyTotal : fallbackTotal;
+            return chosen > 0D ? OptionalDouble.of(chosen) : OptionalDouble.empty();
+        } catch (ReflectiveOperationException ex) {
+            return OptionalDouble.empty();
         }
     }
 

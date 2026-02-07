@@ -72,6 +72,7 @@ public final class DonutAuctionsPlugin extends JavaPlugin {
         economyHook.initialize();
         ultimateShopHook.reload();
         filterManager.reload();
+        auctionService.reloadRuntimeSchedulers();
         menuService.shutdown();
     }
 

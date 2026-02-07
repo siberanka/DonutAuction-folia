@@ -94,10 +94,9 @@ ultimateshop:
   # TR: Yalin ihale degeri = UltimateShop satis fiyati * bu carpan.
   # EN: Example: sell=1000, multiplier=1.25 -> plain=1250.
   # TR: Ornek: satis=1000, carpan=1.25 -> yalin=1250.
-  # EN: Both keys are kept for backward compatibility.
-  # TR: Geriye donuk uyumluluk icin iki anahtar da bulunur.
+  # EN: This is the active multiplier setting.
+  # TR: Aktif carpan ayari budur.
   base-price-multiplier: 1.25
-  base-auction-multiplier: 1.25
 
   # ----------------------------------------------------------
   # EN: Dynamic price / sale counter behavior
@@ -144,8 +143,8 @@ ultimateshop:
   # ----------------------------------------------------------
   # EN: Formula:
   # TR: Formul:
-  # EN: 1) plain_value = sell_price * base-auction-multiplier
-  # TR: 1) yalin_deger = satis_fiyati * base-auction-multiplier
+  # EN: 1) plain_value = sell_price * base-price-multiplier
+  # TR: 1) yalin_deger = satis_fiyati * base-price-multiplier
   # EN: 2) Each enchant bonus is calculated separately from plain_value:
   # TR: 2) Her buyu bonusu yalin_deger uzerinden ayri hesaplanir:
   # EN:    bonus = plain_value * multiplier

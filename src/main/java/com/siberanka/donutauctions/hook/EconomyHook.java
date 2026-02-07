@@ -8,6 +8,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.RegisteredServiceProvider;
 
 import java.util.Locale;
+import java.math.RoundingMode;
+import java.math.BigDecimal;
 
 public final class EconomyHook {
 
@@ -61,9 +63,14 @@ public final class EconomyHook {
     }
 
     public String format(double amount) {
-        if (economy != null) {
-            return economy.format(amount);
+        double normalized = normalizeAmount(amount);
+        return String.format(Locale.US, "%.2f", normalized);
+    }
+
+    public double normalizeAmount(double amount) {
+        if (!Double.isFinite(amount)) {
+            return 0D;
         }
-        return String.format(Locale.US, "%.2f", amount);
+        return BigDecimal.valueOf(amount).setScale(2, RoundingMode.HALF_UP).doubleValue();
     }
 }

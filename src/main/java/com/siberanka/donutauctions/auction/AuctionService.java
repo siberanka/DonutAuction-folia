@@ -28,6 +28,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 public final class AuctionService {
 
@@ -154,11 +156,21 @@ public final class AuctionService {
         processedOperations.clear();
     }
 
+    public void reloadRuntimeSchedulers() {
+        cancelFoliaAutosave();
+        if (autosaveTaskId != -1) {
+            Bukkit.getScheduler().cancelTask(autosaveTaskId);
+            autosaveTaskId = -1;
+        }
+        startAutoSave();
+    }
+
     public synchronized Optional<AuctionListing> createListing(Player seller, ItemStack item, double price) {
         if (seller == null || item == null || item.getType() == Material.AIR || item.getAmount() <= 0) {
             return Optional.empty();
         }
-        if (!Double.isFinite(price) || price <= 0D) {
+        double normalizedPrice = roundCurrency(price);
+        if (!Double.isFinite(normalizedPrice) || normalizedPrice <= 0D) {
             return Optional.empty();
         }
         if (!isMetaSafe(item.getItemMeta())) {
@@ -185,7 +197,7 @@ public final class AuctionService {
                 seller.getUniqueId(),
                 seller.getName(),
                 item.clone(),
-                price,
+                normalizedPrice,
                 Instant.now(),
                 Instant.now().plus(Duration.ofHours(durationHours))
         );
@@ -456,5 +468,12 @@ public final class AuctionService {
             }
         }
         return meta.getPersistentDataContainer().getKeys().size() <= maxPdcKeys;
+    }
+
+    private double roundCurrency(double value) {
+        if (!Double.isFinite(value)) {
+            return 0D;
+        }
+        return BigDecimal.valueOf(value).setScale(2, RoundingMode.HALF_UP).doubleValue();
     }
 }

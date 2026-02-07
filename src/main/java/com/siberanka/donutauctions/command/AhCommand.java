@@ -90,14 +90,40 @@ public final class AhCommand implements CommandExecutor, TabCompleter {
             return;
         }
 
-        if (mustBeUltimateSellable(player, hand) && !ultimateShop.isSellable(hand, player)) {
+        boolean forceSuggested = shouldForceSuggestedPrice(player);
+        int amountToSell = hand.getAmount();
+        if (forceSuggested && args.length >= 2) {
+            Integer parsed = parseAmount(forceModeAmountArg(args), hand.getAmount());
+            if (parsed == null) {
+                player.sendMessage(lang.text("messages.invalid-amount"));
+                return;
+            }
+            amountToSell = parsed;
+        } else if (!forceSuggested && args.length >= 3) {
+            Integer parsed = parseAmount(args[2], hand.getAmount());
+            if (parsed == null) {
+                player.sendMessage(lang.text("messages.invalid-amount"));
+                return;
+            }
+            amountToSell = parsed;
+        }
+
+        if (amountToSell <= 0 || amountToSell > hand.getAmount()) {
+            player.sendMessage(lang.text("messages.invalid-amount"));
+            return;
+        }
+
+        ItemStack toList = hand.clone();
+        toList.setAmount(amountToSell);
+
+        if (mustBeUltimateSellable(player, toList) && !ultimateShop.isSellable(toList, player)) {
             player.sendMessage(lang.text("messages.not-sellable-in-ultimateshop"));
             return;
         }
 
         double price;
-        if (shouldForceSuggestedPrice(player)) {
-            OptionalDouble suggested = ultimateShop.suggestAuctionPrice(hand, player);
+        if (forceSuggested) {
+            OptionalDouble suggested = ultimateShop.suggestAuctionPrice(toList, player);
             if (suggested.isEmpty()) {
                 player.sendMessage(lang.text("messages.price-required"));
                 return;
@@ -112,7 +138,7 @@ public final class AhCommand implements CommandExecutor, TabCompleter {
                 return;
             }
         } else {
-            OptionalDouble suggested = ultimateShop.suggestAuctionPrice(hand);
+            OptionalDouble suggested = ultimateShop.suggestAuctionPrice(toList, player);
             if (suggested.isEmpty()) {
                 player.sendMessage(lang.text("messages.price-required"));
                 return;
@@ -125,6 +151,7 @@ public final class AhCommand implements CommandExecutor, TabCompleter {
             player.sendMessage(lang.text("messages.invalid-price"));
             return;
         }
+        price = economy.normalizeAmount(price);
         double minPrice = plugin.getConfig().getDouble("auction.min-price", 0.01D);
         double maxPrice = plugin.getConfig().getDouble("auction.max-price", 1_000_000_000D);
         if (price < minPrice || price > maxPrice) {
@@ -132,8 +159,13 @@ public final class AhCommand implements CommandExecutor, TabCompleter {
             return;
         }
 
-        ItemStack toList = hand.clone();
-        player.getInventory().setItemInMainHand(new ItemStack(Material.AIR));
+        if (amountToSell == hand.getAmount()) {
+            player.getInventory().setItemInMainHand(new ItemStack(Material.AIR));
+        } else {
+            ItemStack remaining = hand.clone();
+            remaining.setAmount(hand.getAmount() - amountToSell);
+            player.getInventory().setItemInMainHand(remaining);
+        }
 
         Optional<AuctionListing> listing = auctionService.createListing(player, toList, price);
         if (listing.isEmpty()) {
@@ -179,5 +211,28 @@ public final class AhCommand implements CommandExecutor, TabCompleter {
     private boolean mustBeUltimateSellable(Player player, ItemStack item) {
         return ultimateShop.isActive()
                 && plugin.getConfig().getBoolean("ultimateshop.only-sellable-items", false);
+    }
+
+    private Integer parseAmount(String raw, int maxAvailable) {
+        if (raw == null || raw.isBlank()) {
+            return null;
+        }
+        int value;
+        try {
+            value = Integer.parseInt(raw);
+        } catch (NumberFormatException ex) {
+            return null;
+        }
+        if (value < 1 || value > maxAvailable) {
+            return null;
+        }
+        return value;
+    }
+
+    private String forceModeAmountArg(String[] args) {
+        // Supports both:
+        // /ah sell <amount>
+        // /ah sell <ignoredPrice> <amount>
+        return args.length >= 3 ? args[2] : args[1];
     }
 }

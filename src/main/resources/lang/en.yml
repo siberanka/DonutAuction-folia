@@ -3,9 +3,10 @@
 messages:
   no-permission: "{prefix}&cYou do not have permission."
   only-player: "{prefix}&cOnly players can use this command."
-  unknown-subcommand: "{prefix}&eUsage: /ah, /ah sell <price>, /ah my, /ah transactions"
+  unknown-subcommand: "{prefix}&eUsage: /ah, /ah sell <price> <amount>, /ah my, /ah transactions"
   hold-item: "{prefix}&cHold the item you want to list in your main hand."
   invalid-price: "{prefix}&cInvalid price. Use a number greater than 0."
+  invalid-amount: "{prefix}&cInvalid amount. Enter a value between 1 and the held item amount."
   price-required: "{prefix}&ePrice is required. Use /ah sell <price>."
   price-suggested: "{prefix}&aUltimateShop suggestion used: &f{price}"
   price-forced-suggested: "{prefix}&eForced suggested price applied: &f{price}"
